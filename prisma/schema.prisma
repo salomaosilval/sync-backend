@@ -12,3 +12,172 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Unit {
+  id               Int      @id @default(autoincrement())
+  code             String   @unique
+  name             String
+
+  tokenProducao    String?
+  tokenHomologacao String?
+
+  ambiente         String   @default("HOMOLOGACAO")
+  active           Boolean  @default(true)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  rawData     RawData[]
+  remittances Remittance[]
+
+  @@map("units")
+}
+
+model EndpointConfig {
+  id          Int      @id @default(autoincrement())
+  module      String   @unique
+  endpoint    String
+  method      String   @default("POST")
+  description String?
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("endpoint_configs")
+}
+
+model ValidationRule {
+  id        Int      @id @default(autoincrement())
+  module    String
+  field     String
+  operator  String
+  value     String
+  level     String
+  code      String
+  message   String
+  active    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("validation_rules")
+}
+
+model RawData {
+  id         Int      @id @default(autoincrement())
+  unitId     Int
+  module     String
+  competency String
+  payload    Json
+  status     String   @default("RECEIVED")
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  unit            Unit              @relation(fields: [unitId], references: [id])
+  transformedData TransformedData[]
+  validations     Validation[]
+
+  @@map("raw_data")
+}
+
+model TransformedData {
+  id        Int      @id @default(autoincrement())
+  rawId     Int
+  payload   Json
+
+  createdAt DateTime @default(now())
+
+  rawData RawData @relation(fields: [rawId], references: [id])
+
+  @@map("transformed_data")
+}
+
+model Validation {
+  id        Int      @id @default(autoincrement())
+  rawId     Int
+  ruleId    Int?
+  level     String
+  code      String
+  message   String
+  field     String?
+  value     String?
+
+  createdAt DateTime @default(now())
+
+  rawData RawData @relation(fields: [rawId], references: [id])
+
+  @@map("validations")
+}
+
+model Remittance {
+  id         Int       @id @default(autoincrement())
+  unitId     Int
+  module     String
+  competency String
+  status     String    @default("PENDING")
+  payload    Json
+  protocol   String?
+  errorMsg   String?
+
+  createdAt  DateTime  @default(now())
+  sentAt     DateTime?
+  updatedAt  DateTime  @updatedAt
+
+  unit           Unit            @relation(fields: [unitId], references: [id])
+  remittanceLogs RemittanceLog[]
+
+  @@map("remittances")
+}
+
+model RemittanceLog {
+  id           Int      @id @default(autoincrement())
+  remittanceId Int
+  direction    String
+  url          String?
+  method       String?
+  headers      Json?
+  body         Json?
+  statusCode   Int?
+  duration     Int?
+
+  createdAt    DateTime @default(now())
+
+  remittance Remittance @relation(fields: [remittanceId], references: [id])
+
+  @@map("remittance_logs")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  entity    String
+  entityId  Int?
+  oldValue  Json?
+  newValue  Json?
+  ip        String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    @default("OPERATOR")
+  active       Boolean   @default(true)
+  lastLogin    DateTime?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
