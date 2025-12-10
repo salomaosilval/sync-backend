@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { Remittance, Prisma } from '../../../generated/prisma/client';
@@ -13,6 +14,17 @@ export interface RemittanceStats {
   total: number;
   byStatus: Record<string, number>;
   byModule: Record<string, number>;
+}
+
+export interface RemittanceFilters {
+  status?: string;
+  module?: string;
+  competency?: string;
+  unitId?: number;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
 }
 
 @Injectable()
@@ -70,14 +82,7 @@ export class RemittancesService {
     return remittance;
   }
 
-  async findAll(filters?: {
-    status?: string;
-    module?: string;
-    competency?: string;
-    unitId?: number;
-    page?: number;
-    limit?: number;
-  }): Promise<{
+  async findAll(filters?: RemittanceFilters): Promise<{
     data: Remittance[];
     total: number;
     page: number;
@@ -87,11 +92,20 @@ export class RemittancesService {
     const limit = filters?.limit ?? 10;
     const skip = (page - 1) * limit;
 
+    const dateFilter: Prisma.RemittanceWhereInput = {};
+    if (filters?.from || filters?.to) {
+      dateFilter.createdAt = {
+        ...(filters.from && { gte: new Date(filters.from) }),
+        ...(filters.to && { lte: new Date(filters.to) }),
+      };
+    }
+
     const where: Prisma.RemittanceWhereInput = {
       ...(filters?.status && { status: filters.status }),
       ...(filters?.module && { module: filters.module }),
       ...(filters?.competency && { competency: filters.competency }),
       ...(filters?.unitId && { unitId: filters.unitId }),
+      ...dateFilter,
     };
 
     const [data, total] = await Promise.all([
@@ -125,7 +139,7 @@ export class RemittancesService {
     const remittance = await this.findOne(id);
 
     if (['SENT', 'CANCELLED'].includes(remittance.status)) {
-      throw new Error(
+      throw new BadRequestException(
         `Não é possível cancelar remessa com status ${remittance.status}`,
       );
     }
@@ -140,7 +154,9 @@ export class RemittancesService {
     const remittance = await this.findOne(id);
 
     if (remittance.status !== 'ERROR') {
-      throw new Error('Apenas remessas com erro podem ser reenviadas');
+      throw new BadRequestException(
+        'Apenas remessas com erro podem ser reenviadas',
+      );
     }
 
     return this.prisma.client.remittance.update({

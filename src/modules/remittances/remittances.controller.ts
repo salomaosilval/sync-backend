@@ -7,7 +7,11 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { RemittancesService, RemittanceStats } from './remittances.service';
+import {
+  RemittancesService,
+  RemittanceStats,
+  RemittanceFilters,
+} from './remittances.service';
 import {
   TceIntegrationService,
   SendResult,
@@ -40,6 +44,8 @@ export class RemittancesController {
     @Query('module') module?: string,
     @Query('competency') competency?: string,
     @Query('unitId') unitId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ): Promise<{
@@ -48,14 +54,17 @@ export class RemittancesController {
     page: number;
     limit: number;
   }> {
-    return this.remittancesService.findAll({
+    const filters: RemittanceFilters = {
       status,
       module,
       competency,
       unitId: unitId ? parseInt(unitId, 10) : undefined,
+      from,
+      to,
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
-    });
+    };
+    return this.remittancesService.findAll(filters);
   }
 
   @Get(':id')
