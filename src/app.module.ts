@@ -11,6 +11,8 @@ import { ValidationRulesModule } from './modules/validation-rules/validation-rul
 import { RawDataModule } from './modules/raw-data/raw-data.module';
 import { ValidationsModule } from './modules/validations/validations.module';
 import { TransformModule } from './modules/transform/transform.module';
+import { RemittancesModule } from './modules/remittances/remittances.module';
+import { TceIntegrationModule } from './modules/tce-integration/tce-integration.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { TransformModule } from './modules/transform/transform.module';
     RawDataModule,
     ValidationsModule,
     TransformModule,
+    RemittancesModule,
+    TceIntegrationModule,
   ],
   controllers: [AppController],
   providers: [
