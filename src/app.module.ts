@@ -7,6 +7,7 @@ import { PrismaModule } from './shared/prisma/prisma.module';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { UnitsModule } from './modules/units/units.module';
+import { ValidationRulesModule } from './modules/validation-rules/validation-rules.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UnitsModule } from './modules/units/units.module';
     }),
     PrismaModule,
     UnitsModule,
+    ValidationRulesModule,
   ],
   controllers: [AppController],
   providers: [
