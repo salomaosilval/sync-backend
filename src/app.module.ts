@@ -10,6 +10,7 @@ import { UnitsModule } from './modules/units/units.module';
 import { ValidationRulesModule } from './modules/validation-rules/validation-rules.module';
 import { RawDataModule } from './modules/raw-data/raw-data.module';
 import { ValidationsModule } from './modules/validations/validations.module';
+import { TransformModule } from './modules/transform/transform.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ValidationsModule } from './modules/validations/validations.module';
     ValidationRulesModule,
     RawDataModule,
     ValidationsModule,
+    TransformModule,
   ],
   controllers: [AppController],
   providers: [
