@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './shared/prisma/prisma.module';
@@ -15,6 +15,10 @@ import { RemittancesModule } from './modules/remittances/remittances.module';
 import { TceIntegrationModule } from './modules/tce-integration/tce-integration.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuditInterceptor } from './shared/interceptors/audit.interceptor';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from './modules/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -23,6 +27,8 @@ import { AuditInterceptor } from './shared/interceptors/audit.interceptor';
       envFilePath: '.env',
     }),
     PrismaModule,
+    AuthModule,
+    UsersModule,
     UnitsModule,
     ValidationRulesModule,
     RawDataModule,
@@ -35,6 +41,14 @@ import { AuditInterceptor } from './shared/interceptors/audit.interceptor';
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
